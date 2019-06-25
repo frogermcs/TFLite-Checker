@@ -48,6 +48,27 @@ public class ClassificationFrameProcessor implements FrameProcessor {
         bitmap.recycle();
 
         ByteBuffer byteBufferToClassify = bitmapToModelsMatchingByteBuffer(toClassify);
+        if (modelConfig.isQuantized()) {
+            runInferenceOnQuantizedModel(byteBufferToClassify);
+        } else {
+            runInferenceOnFloatModel(byteBufferToClassify);
+        }
+    }
+
+    private void runInferenceOnQuantizedModel(ByteBuffer byteBufferToClassify) {
+        byte[][] result = new byte[1][labels.size()];
+        interpreter.run(byteBufferToClassify, result);
+        float[][] resultFloats = new float[1][labels.size()];
+        byte[] bytes = result[0];
+        for (int i = 0; i < bytes.length; i++) {
+            float resultF = (bytes[i] & 0xff) / 255.f;
+            resultFloats[0][i] = resultF;
+
+        }
+        classificationListener.onClassifiedFrame(getSortedResult(resultFloats));
+    }
+
+    private void runInferenceOnFloatModel(ByteBuffer byteBufferToClassify) {
         float[][] result = new float[1][labels.size()];
         interpreter.run(byteBufferToClassify, result);
         classificationListener.onClassifiedFrame(getSortedResult(result));
@@ -62,8 +83,14 @@ public class ClassificationFrameProcessor implements FrameProcessor {
         for (int i = 0; i < modelConfig.getInputWidth(); ++i) {
             for (int j = 0; j < modelConfig.getInputHeight(); ++j) {
                 int pixelVal = intValues[pixel++];
-                for (float channelVal : pixelToChannelValues(pixelVal)) {
-                    byteBuffer.putFloat(channelVal);
+                if (modelConfig.isQuantized()) {
+                    for (byte channelVal : pixelToChannelValuesQuant(pixelVal)) {
+                        byteBuffer.put(channelVal);
+                    }
+                } else {
+                    for (float channelVal : pixelToChannelValues(pixelVal)) {
+                        byteBuffer.putFloat(channelVal);
+                    }
                 }
             }
         }
@@ -87,6 +114,14 @@ public class ClassificationFrameProcessor implements FrameProcessor {
         } else {
             throw new RuntimeException("Only 1 or 3 channels supported at the moment.");
         }
+    }
+
+    private byte[] pixelToChannelValuesQuant(int pixel) {
+        byte[] rgbVals = new byte[3];
+        rgbVals[0] = (byte) ((pixel >> 16) & 0xFF);
+        rgbVals[1] = (byte) ((pixel >> 8) & 0xFF);
+        rgbVals[2] = (byte) ((pixel) & 0xFF);
+        return rgbVals;
     }
 
     private List<ClassificationResult> getSortedResult(float[][] resultsArray) {

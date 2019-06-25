@@ -1,0 +1,10 @@
+30_speed
+60_speed
+80_speed
+80_lifted
+120_speed
+no_overtaking_general
+right_of_way_general
+stop
+no_way_general
+no_way_trucks

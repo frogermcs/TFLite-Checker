@@ -40,4 +40,9 @@ public class MnistConfig extends ModelConfig {
     public float getStd() {
         return 255.f;
     }
+
+    @Override
+    public boolean isQuantized() {
+        return false;
+    }
 }

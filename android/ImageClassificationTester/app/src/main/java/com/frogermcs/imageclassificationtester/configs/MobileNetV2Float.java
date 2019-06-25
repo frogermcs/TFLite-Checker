@@ -41,4 +41,9 @@ public class MobileNetV2Float extends ModelConfig {
     public float getMean() {
         return 128.f;
     }
+
+    @Override
+    public boolean isQuantized() {
+        return false;
+    }
 }

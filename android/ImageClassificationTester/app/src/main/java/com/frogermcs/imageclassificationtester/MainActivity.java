@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.frogermcs.imageclassificationtester.configs.GtsrbQuantConfig;
 import com.frogermcs.imageclassificationtester.configs.MobileNetV2Float;
 import com.frogermcs.imageclassificationtester.configs.ModelConfig;
 import com.otaliastudios.cameraview.CameraView;
@@ -34,8 +35,9 @@ public class MainActivity extends AppCompatActivity
 
     private void initClassification() {
         try {
-            ModelConfig modelConfig = new MobileNetV2Float();
+//            ModelConfig modelConfig = new MobileNetV2Float();
 //            ModelConfig modelConfig = new MnistConfig();
+            ModelConfig modelConfig = new GtsrbQuantConfig();
             classificationFrameProcessor = new ClassificationFrameProcessor(this, this, modelConfig);
             cameraView.addFrameProcessor(classificationFrameProcessor);
         } catch (IOException e) {
